@@ -1,0 +1,24 @@
+tasks:
+  ogen:gen:
+    deps: [ogen:install, yq:install, redocly-cli:bundle]
+    vars:
+      OPEN_API_FILES: '{{.OPEN_API_FILES | default "."}}'
+      OGEN: '{{.OGEN | default "ogen"}}'
+      YQ: '{{.YQ | default "yq"}}'
+    cmds:
+      - |
+        bash -lc '
+          set -euo pipefail
+          mapfile -t files < <(find "{{.OPEN_API_FILES}}" \( -name "*.yaml" -o -name "*.yml" \) -type f)
+          for file in "${files[@]}"; do
+            if ! {{.YQ}} "has(\"x-ogen\")" "$file" >/dev/null 2>&1; then
+              continue
+            fi
+            target=$({{.YQ}} -r "\".x-ogen\".target // empty" "$file")
+            package=$({{.YQ}} -r "\".x-ogen\".package // empty" "$file")
+            [ -z "$target" ] && { echo "❌ $file: .x-ogen.target пуст"; exit 1; }
+            [ -z "$package" ] && { echo "❌ $file: .x-ogen.package пуст"; exit 1; }
+            echo "🚀 $file → $target ($package)"
+            {{.OGEN}} --target "$target" --package "$package" --clean "$file"
+          done
+        '

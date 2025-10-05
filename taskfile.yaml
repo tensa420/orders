@@ -35,6 +35,30 @@ vars:
   MODULES: assembly inventory order payment platform iam notification
 
 tasks:
+  ogen:gen:
+    deps: [ogen:install, yq:install, redocly-cli:bundle]
+    vars:
+      OPEN_API_FILES: '{{.OPEN_API_FILES | default "."}}'
+      OGEN: '{{.OGEN | default "ogen"}}'
+      YQ: '{{.YQ | default "yq"}}'
+    cmds:
+      - |
+        bash -lc '
+          set -euo pipefail
+          mapfile -t files < <(find "{{.OPEN_API_FILES}}" \( -name "*.yaml" -o -name "*.yml" \) -type f)
+          for file in "${files[@]}"; do
+            if ! {{.YQ}} "has(\"x-ogen\")" "$file" >/dev/null 2>&1; then
+              continue
+            fi
+            target=$({{.YQ}} -r "\".x-ogen\".target // empty" "$file")
+            package=$({{.YQ}} -r "\".x-ogen\".package // empty" "$file")
+            [ -z "$target" ] && { echo "❌ $file: .x-ogen.target пуст"; exit 1; }
+            [ -z "$package" ] && { echo "❌ $file: .x-ogen.package пуст"; exit 1; }
+            echo "🚀 $file → $target ($package)"
+            {{.OGEN}} --target "$target" --package "$package" --clean "$file"
+          done
+        '
+
   install-formatters:
     desc: "Устанавливает форматтеры gci и gofumpt в ./bin"
     summary: |
@@ -151,7 +175,7 @@ tasks:
       - |
         protoc -I proto -I "C:\protoc\include" \
           --go_out=pkg/pb/payment --go_opt=paths=source_relative \
-          --go-grpc_out=pkg/pb/payment --go-grpc_opt=paths=source_relative \
+          --go-grpc_out=pkg/pb/pa --go-grpc_opt=paths=source_relative \
           proto/payment/payment.proto \
   proto:install-plugins:
     desc: "Устанавливает protoc плагины в каталог bin"
@@ -208,28 +232,6 @@ tasks:
           mkdir -p {{.BIN_DIR}}
           GOBIN={{.BIN_DIR}} go install github.com/ogen-go/ogen/cmd/ogen@{{.OGEN_VERSION}}
         }
-
-  ogen:gen:
-    desc: "Генерация Go-кода из всех OpenAPI-деклараций с x-ogen"
-    deps: [ ogen:install, yq:install ]
-    cmds:
-      - task: redocly-cli:bundle
-      - |
-        find {{.OPEN_API_FILES}} -name '*.yaml' -o -name '*.yml' | while read -r file; do
-          if [ -f "$file" ] && grep -q 'x-ogen:' "$file"; then
-            echo "🚀 Generating from: $file"
-            target=$({{.YQ}} e '."x-ogen".target' "$file")
-            package=$({{.YQ}} e '."x-ogen".package' "$file")
-            echo "📁 Target: $target"
-            echo "📦 Package: $package"
-            {{.OGEN}} \
-              --target "$target" \
-              --package "$package" \
-              --clean \
-              "$file" || exit 1
-          fi
-        done
-
   gen:
     desc: "Генерация всех proto и OpenAPI деклараций"
     cmds:
