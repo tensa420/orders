@@ -3,16 +3,21 @@ package main
 import (
 	"context"
 	"github.com/google/uuid"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+	"log"
+	"net"
 	"net/http"
-	"sync"
-)
-
-import (
 	ap "order/api"
 	in "order/pkg/pb/inventory/inventory"
 	pay "order/pkg/pb/payment/payment"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
 type Order struct {
@@ -24,14 +29,6 @@ type Order struct {
 	PaymentMethod   *string  `json:"payment_method"`
 	Status          string   `json:"status"`
 }
-
-const (
-	PaymentMethodUnknown = iota
-	PaymentMethodCARD
-	PaymentMethodSBP
-	PaymentMethodCREDITCARD
-	PaymentMethodINVESTORMONEY
-)
 
 var InventoryAddress = ":50052"
 var PaymentAddress = ":50051"
@@ -57,11 +54,6 @@ func NewOrderHandler(order *OrderStorage, inv in.InventoryServiceClient, pay pay
 	return &OrderHandler{orders: order, inventory: inv, payment: pay}
 }
 
-type Server struct {
-	in.InventoryServiceClient
-	pay.PaymentClient
-}
-
 func PaymToEnum(s string) (pay.PaymentMethod, error) {
 	switch s {
 	case "CARD":
@@ -76,54 +68,59 @@ func PaymToEnum(s string) (pay.PaymentMethod, error) {
 		return pay.PaymentMethod_PAYMENT_METHOD_UNKNOWN, nil
 	}
 }
-func (s *OrderHandler) CreateOrders(ctx context.Context, reqBody ap.CreateOrderRequest, server Server) (*ap.CreateOrderResponse, error) {
+func (s *OrderHandler) HandleCreateOrder(ctx context.Context, req *ap.CreateOrderRequest) (ap.HandleCreateOrderRes, error) {
 
 	grpcToIn := &in.ListPartsRequest{
 		Filter: &in.PartsFilter{
-			Uuids: reqBody.PartUuids,
+			Uuids: req.PartUuids,
 		},
 	}
 
-	grpcFromIn, err := server.ListParts(ctx, grpcToIn)
+	grpcFromIn, err := s.inventory.ListParts(ctx, grpcToIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	var TotalPrice float64
-
+	var total float64
 	for _, part := range grpcFromIn.Parts {
 		reqToGetPart := &in.GetPartRequest{Uuid: part.UUID}
-		_, err1 := server.GetPart(ctx, reqToGetPart)
+		_, err1 := s.inventory.GetPart(ctx, reqToGetPart)
 		if err1 != nil {
 			return nil, status.Error(codes.Internal, err1.Error())
 		}
-		TotalPrice += part.Price
+		total += part.Price
 	}
+
 	UUID := uuid.New()
+
 	order := &Order{
 		OrderUUID:  UUID.String(),
-		UserUUID:   reqBody.UserUUID.String(),
-		PartsUUID:  reqBody.PartUuids,
-		TotalPrice: TotalPrice,
+		UserUUID:   req.UserUUID.String(),
+		PartsUUID:  req.PartUuids,
+		TotalPrice: total,
 		Status:     "PENDING_PAYMENT",
 	}
 
+	s.orders.mu.Lock()
 	s.orders.Orders[order.OrderUUID] = order
+	s.orders.mu.Unlock()
 
 	return &ap.CreateOrderResponse{
 		OrderUUID:  UUID,
-		TotalPrice: TotalPrice,
+		TotalPrice: total,
 	}, nil
 }
 
-func (s *OrderHandler) PayOrder(ctx context.Context, res ap.PayOrderRequest, params ap.HandlePayOrderParams, server Server) (*ap.PayOrderResponse, error) {
-
+func (s *OrderHandler) HandlePayOrder(ctx context.Context, req *ap.PayOrderRequest, params ap.HandlePayOrderParams) (ap.HandlePayOrderRes, error) {
+	s.orders.mu.RLock()
 	ord, ok := s.orders.Orders[params.OrderUUID.String()]
+	s.orders.mu.RUnlock()
+
 	if !ok {
 		return nil, status.Error(codes.NotFound, "order not found")
 	}
 
-	pm, err := PaymToEnum(res.PaymentMethod)
+	pm, err := PaymToEnum(req.PaymentMethod)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -135,13 +132,15 @@ func (s *OrderHandler) PayOrder(ctx context.Context, res ap.PayOrderRequest, par
 			PaymentMethod: pm,
 		},
 	}
-	grpcFromPay, err := server.PayOrder(ctx, grpcToPay)
+	grpcFromPay, err := s.payment.PayOrder(ctx, grpcToPay)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	s.orders.mu.Lock()
 	s.orders.Orders[params.OrderUUID.String()].Status = "PAID"
 	s.orders.Orders[params.OrderUUID.String()].TransactionUUID = &grpcFromPay.TransactionUuid
+	s.orders.mu.Unlock()
 
 	transUUID, err := uuid.Parse(grpcFromPay.TransactionUuid)
 	if err != nil {
@@ -153,8 +152,10 @@ func (s *OrderHandler) PayOrder(ctx context.Context, res ap.PayOrderRequest, par
 	}, nil
 }
 
-func (s *OrderHandler) GetOrder(params ap.HandleGetOrderParams, server Server) (*ap.GetOrderResponse, error) {
+func (s *OrderHandler) HandleGetOrder(ctx context.Context, params ap.HandleGetOrderParams) (ap.HandleGetOrderRes, error) {
+	s.orders.mu.RLock()
 	ord, ok := s.orders.Orders[params.OrderUUID.String()]
+	s.orders.mu.RUnlock()
 	if !ok {
 		return nil, status.Error(codes.NotFound, "order not found")
 	}
@@ -179,28 +180,79 @@ func (s *OrderHandler) GetOrder(params ap.HandleGetOrderParams, server Server) (
 	}, nil
 }
 
-func (s *OrderHandler) CancelOrder(params ap.HandleCancelOrderParams) ap.Error {
+func (s *OrderHandler) HandleCancelOrder(ctx context.Context, params ap.HandleCancelOrderParams) (ap.HandleCancelOrderRes, error) {
 
 	ord, ok := s.orders.Orders[params.OrderUUID.String()]
 	if !ok {
-		return ap.Error{Code: "404", Message: "order not found"}
+		return &ap.HandleCancelOrderNotFound{Code: "NotFound", Message: "Order not found"}, nil
 	}
+
 	if ord.Status == "PAID" {
-		return ap.Error{
-			Code:    "409",
-			Message: "order already paid",
-		}
+		return &ap.HandleCancelOrderConflict{Code: "CancelOrderConflict", Message: "Order is already paid"}, nil
 	}
-	if ord.Status == "PENDING_PAYMENT" {
-		ord.Status = "CANCELLED"
-		return ap.Error{
-			Code:    "204",
-			Message: "No content",
-		}
-	}
-	return ap.Error{}
+
+	ord.Status = "CANCELLED"
+	return &ap.HandleCancelOrderNoContent{}, nil
 }
 func main() {
-	orders := NewOrderStorage()
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	connInventory, err := grpc.DialContext(
+		ctx,
+		InventoryAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		log.Fatalf("Failed to connect to inventory: %v", err)
+	}
+
+	inventoryClient := in.NewInventoryServiceClient(connInventory)
+	defer connInventory.Close()
+
+	connPayment, err := grpc.DialContext(
+		ctx,
+		PaymentAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		log.Fatalf("Failed to connect to payment: %v", err)
+	}
+
+	paymentClient := pay.NewPaymentClient(connPayment)
+	defer connPayment.Close()
+
+	orders := NewOrderStorage()
+	hand := NewOrderHandler(orders, inventoryClient, paymentClient)
+	orderHandler, err := ap.NewServer(hand, nil)
+	if err != nil {
+		log.Fatalf("Failed to create server: %v", err)
+	}
+	srv := &http.Server{
+		Addr:    "localhost:8080",
+		Handler: orderHandler,
+	}
+	go func() {
+		serv, err := net.Listen("tcp", srv.Addr)
+		if err != nil {
+			log.Fatalf("Failed to listen: %v", err)
+		}
+		err = srv.Serve(serv)
+		if err != nil {
+			log.Fatalf("Failed to serve: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+	err = srv.Shutdown(ctx)
+	if err != nil {
+		log.Fatalf("Server shutdown error: %v", err)
+	}
+	log.Println("Server shutdown successfully")
 }
