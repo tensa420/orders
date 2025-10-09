@@ -2,7 +2,7 @@ package order
 
 import (
 	"context"
-	mod "order/internal/repository/model"
+	repoModel "order/internal/repository/model"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,10 +15,10 @@ func (r *repository) CancelOrder(ctx context.Context, orderUUID string) error {
 		return status.Error(codes.NotFound, "order not found")
 	}
 
-	if ord.Status == mod.Status(0) {
+	if ord.Status == repoModel.StatusPaid {
 		return status.Error(codes.Internal, "Order already paid")
 	}
 
-	ord.Status = mod.Status(2)
+	ord.Status = repoModel.StatusCancelled
 	return nil
 }

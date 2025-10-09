@@ -10,5 +10,5 @@ type InventoryClient interface {
 }
 
 type PaymentClient interface {
-	PayOrder(ctx context.Context, userUUID, orderUUID, PaymentMethod string) (string, error)
+	PayOrder(ctx context.Context, orderUUID string, PaymentMethod string) (string, error)
 }

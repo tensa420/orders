@@ -1,10 +1,14 @@
 package converter
 
 import (
-	"order/internal/repository/model"
+	"order/api"
+	repoModel "order/internal/repository/model"
+	"order/internal/service/model"
 	v1 "order/pkg/inventory/inventory"
 	v2 "order/pkg/payment/payment"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func PaymentMethodToEnum(s string) v2.PaymentMethod {
@@ -22,10 +26,10 @@ func PaymentMethodToEnum(s string) v2.PaymentMethod {
 	}
 }
 
-func PartFilterToProto(filter model.PartsFilter) *v1.PartsFilter {
+func PartFilterToProto(filter repoModel.PartsFilter) *v1.PartsFilter {
 	categories := make([]v1.Category, 0, len(filter.Categories))
 	for _, v := range filter.Categories {
-		categories = append(categories, v1.Category(v))
+		categories = append(categories, convertCategoryFromPB(v))
 	}
 	return &v1.PartsFilter{
 		Uuids:                 filter.Uuids,
@@ -108,4 +112,67 @@ func PartsListToModel(parts []*v1.Part) []*model.Part {
 	return res
 }
 
-func
+func UUIDToString(uuid uuid.UUID) string {
+	tmp := uuid.String()
+	return tmp
+}
+func StringToUUID(s string) uuid.UUID {
+	return uuid.MustParse(s)
+}
+
+func OptNilUUIDToUUID(str *string) api.OptNilUUID {
+	return api.OptNilUUID{
+		Value: StringToUUID(*str),
+		Set:   true,
+		Null:  false,
+	}
+}
+func OptNilStringToString(str *string) api.OptNilString {
+	return api.OptNilString{
+		Value: *str,
+		Set:   true,
+		Null:  false,
+	}
+}
+func ConvertPaymentMethodToString(method repoModel.PaymentMethod) string {
+	switch method {
+	case repoModel.PaymentMethodCard:
+		return "CARD"
+	case repoModel.PaymentMethodSBP:
+		return "PaymentMethodSBP"
+	case repoModel.PaymentMethodCreditCard:
+		return "CREDIT_CARD"
+	case repoModel.PaymentMethodInvestorMoney:
+		return "INVESTOR_MONEY"
+	default:
+		return "UNKNOWN"
+	}
+}
+func ConvertPaymentMethod(method string) repoModel.PaymentMethod {
+	switch method {
+	case "CARD":
+		return repoModel.PaymentMethodCard
+	case "PaymentMethodSBP":
+		return repoModel.PaymentMethodSBP
+	case "CREDIT_CARD":
+		return repoModel.PaymentMethodCreditCard
+	case "INVESTOR_MONEY":
+		return repoModel.PaymentMethodInvestorMoney
+	default:
+		return repoModel.PaymentMethodUnknown
+	}
+}
+func convertCategoryFromPB(category repoModel.Category) v1.Category {
+	switch category {
+	case repoModel.CategoryEngine:
+		return v1.Category_CATEGORY_ENGINE
+	case repoModel.CategoryFuel:
+		return v1.Category_CATEGORY_FUEL
+	case repoModel.CategoryWing:
+		return v1.Category_CATEGORY_WING
+	case repoModel.CategoryPorthole:
+		return v1.Category_CATEGORY_PORTHOLE
+	default:
+		return v1.Category_CATEGORY_UNKNOWN
+	}
+}

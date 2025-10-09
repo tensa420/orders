@@ -2,13 +2,13 @@ package order
 
 import (
 	"context"
-	"order/internal/repository/model"
+	repoModel "order/internal/repository/model"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (r *repository) HandleGetOrder(ctx context.Context, orderUUID string) (*model.GetOrderResponse, error) {
+func (r *repository) HandleGetOrder(ctx context.Context, orderUUID string) (*repoModel.GetOrderResponse, error) {
 	r.mu.Lock()
 	ord, ok := r.orders[orderUUID]
 	r.mu.Unlock()
@@ -17,7 +17,7 @@ func (r *repository) HandleGetOrder(ctx context.Context, orderUUID string) (*mod
 		return nil, status.Error(codes.NotFound, "order not found")
 	}
 
-	return &model.GetOrderResponse{
+	return &repoModel.GetOrderResponse{
 		OrderUUID:       orderUUID,
 		UserUUID:        ord.UserUUID,
 		PartUuids:       ord.PartsUUID,
