@@ -6,11 +6,8 @@ info:
   description:
     Описание всего функционала Order API
 
-
 servers:
   - url: http://localhost:8080
-
-
 
 paths:
   /api/v1/orders:
@@ -117,12 +114,6 @@ paths:
                 $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/InternalError'
-
-
-
-
-
-
 
 components:
   schemas:

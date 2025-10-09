@@ -2,22 +2,23 @@ package main
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
 	"log"
 	"net"
 	"net/http"
 	ap "order/api"
-	in "order/pkg/pb/inventory/inventory"
-	pay "order/pkg/pb/payment/payment"
+	"order/pkg/inventory/inventory"
+	v2 "order/pkg/payment/payment"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/google/uuid"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 type Order struct {
@@ -46,32 +47,32 @@ func NewOrderStorage() *OrderStorage {
 
 type OrderHandler struct {
 	orders    *OrderStorage
-	inventory in.InventoryServiceClient
-	payment   pay.PaymentClient
+	inventory v1.InventoryServiceClient
+	payment   v2.PaymentClient
 }
 
-func NewOrderHandler(order *OrderStorage, inv in.InventoryServiceClient, pay pay.PaymentClient) *OrderHandler {
+func NewOrderHandler(order *OrderStorage, inv v1.InventoryServiceClient, pay v2.PaymentClient) *OrderHandler {
 	return &OrderHandler{orders: order, inventory: inv, payment: pay}
 }
 
-func PaymToEnum(s string) (pay.PaymentMethod, error) {
+func PaymToEnum(s string) (v2.PaymentMethod, error) {
 	switch s {
 	case "CARD":
-		return pay.PaymentMethod_PAYMENT_METHOD_CARD, nil
+		return v2.PaymentMethod_PAYMENT_METHOD_CARD, nil
 	case "SBP":
-		return pay.PaymentMethod_PAYMENT_METHOD_SBP, nil
+		return v2.PaymentMethod_PAYMENT_METHOD_SBP, nil
 	case "CREDITCARD":
-		return pay.PaymentMethod_PAYMENT_METHOD_CARD, nil
+		return v2.PaymentMethod_PAYMENT_METHOD_CARD, nil
 	case "INVESTORMONEY":
-		return pay.PaymentMethod_PAYMENT_METHOD_INVESTOR_MONEY, nil
+		return v2.PaymentMethod_PAYMENT_METHOD_INVESTOR_MONEY, nil
 	default:
-		return pay.PaymentMethod_PAYMENT_METHOD_UNKNOWN, nil
+		return v2.PaymentMethod_PAYMENT_METHOD_UNKNOWN, nil
 	}
 }
 func (s *OrderHandler) HandleCreateOrder(ctx context.Context, req *ap.CreateOrderRequest) (ap.HandleCreateOrderRes, error) {
 
-	grpcToIn := &in.ListPartsRequest{
-		Filter: &in.PartsFilter{
+	grpcToIn := &v1.ListPartsRequest{
+		Filter: &v1.PartsFilter{
 			Uuids: req.PartUuids,
 		},
 	}
@@ -83,7 +84,7 @@ func (s *OrderHandler) HandleCreateOrder(ctx context.Context, req *ap.CreateOrde
 
 	var total float64
 	for _, part := range grpcFromIn.Parts {
-		reqToGetPart := &in.GetPartRequest{Uuid: part.UUID}
+		reqToGetPart := &v1.GetPartRequest{Uuid: part.UUID}
 		_, err1 := s.inventory.GetPart(ctx, reqToGetPart)
 		if err1 != nil {
 			return nil, status.Error(codes.Internal, err1.Error())
@@ -125,8 +126,8 @@ func (s *OrderHandler) HandlePayOrder(ctx context.Context, req *ap.PayOrderReque
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	grpcToPay := &pay.PayOrderRequest{
-		Order: &pay.OrderRequest{
+	grpcToPay := &v2.PayOrderRequest{
+		Order: &v2.OrderRequest{
 			OrderUuid:     ord.OrderUUID,
 			UserUuid:      ord.UserUUID,
 			PaymentMethod: pm,
@@ -209,7 +210,7 @@ func main() {
 		log.Fatalf("Failed to connect to inventory: %v", err)
 	}
 
-	inventoryClient := in.NewInventoryServiceClient(connInventory)
+	inventoryClient := v1.NewInventoryServiceClient(connInventory)
 	defer connInventory.Close()
 
 	connPayment, err := grpc.DialContext(
@@ -222,7 +223,7 @@ func main() {
 		log.Fatalf("Failed to connect to payment: %v", err)
 	}
 
-	paymentClient := pay.NewPaymentClient(connPayment)
+	paymentClient := v2.NewPaymentClient(connPayment)
 	defer connPayment.Close()
 
 	orders := NewOrderStorage()
