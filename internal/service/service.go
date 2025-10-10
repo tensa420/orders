@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"order/internal/repository/model"
+	repoModel "order/internal/repository/model"
 )
 
 type OrderService interface {
 	CreateOrder(ctx context.Context, userUUID string, partUUIDS []string) (string, float64, error)
 	PayOrder(ctx context.Context, orderUUID string, paymentMethod string) (string, error)
-	GetOrder(ctx context.Context, orderUUID string) (*model.GetOrderResponse, error)
+	GetOrder(ctx context.Context, orderUUID string) (*repoModel.GetOrderResponse, error)
 	CancelOrder(ctx context.Context, orderUUID string) error
 }

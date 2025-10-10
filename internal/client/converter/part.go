@@ -4,8 +4,8 @@ import (
 	"order/api"
 	repoModel "order/internal/repository/model"
 	"order/internal/service/model"
-	v1 "order/pkg/inventory/inventory"
-	v2 "order/pkg/payment/payment"
+	v1 "order/pkg/inventory"
+	v2 "order/pkg/payment"
 	"time"
 
 	"github.com/google/uuid"
@@ -66,6 +66,32 @@ func PartProtoToModel(part *v1.Part) *model.Part {
 		UpdatedAt:     updatedAt,
 	}
 }
+func PartProtoToRepoModel(part *v1.Part) *repoModel.Part {
+	var updatedAt *time.Time
+	if part.UpdatedAt != nil {
+		tmp := part.UpdatedAt.AsTime()
+		updatedAt = &tmp
+	}
+	var createdAt *time.Time
+	if part.CreatedAt != nil {
+		tmp := part.CreatedAt.AsTime()
+		createdAt = &tmp
+	}
+	return &repoModel.Part{
+		UUID:          part.UUID,
+		Name:          part.Name,
+		Description:   part.Description,
+		Price:         part.Price,
+		StockQuantity: part.StockQuantity,
+		Category:      int8(part.Category),
+		Dimensions:    DimensionsToRepoModel(part.Dimensions),
+		Manufacturer:  ManufacturerToRepoModel(part.Manufacturer),
+		Tags:          part.Tags,
+		MetaData:      MetaDataToModel(part.Metadata),
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
+	}
+}
 
 func DimensionsToModel(dimen *v1.Dimensions) model.Dimensions {
 	return model.Dimensions{
@@ -75,9 +101,23 @@ func DimensionsToModel(dimen *v1.Dimensions) model.Dimensions {
 		Weight: dimen.Weight,
 	}
 }
-
+func DimensionsToRepoModel(dimen *v1.Dimensions) repoModel.Dimensions {
+	return repoModel.Dimensions{
+		Height: dimen.Height,
+		Width:  dimen.Width,
+		Length: dimen.Length,
+		Weight: dimen.Weight,
+	}
+}
 func ManufacturerToModel(manu *v1.Manufacturer) model.Manufacturer {
 	return model.Manufacturer{
+		Name:    manu.Name,
+		Country: manu.Country,
+		Website: manu.Website,
+	}
+}
+func ManufacturerToRepoModel(manu *v1.Manufacturer) repoModel.Manufacturer {
+	return repoModel.Manufacturer{
 		Name:    manu.Name,
 		Country: manu.Country,
 		Website: manu.Website,
@@ -108,6 +148,13 @@ func PartsListToModel(parts []*v1.Part) []*model.Part {
 	res := make([]*model.Part, len(parts))
 	for _, part := range parts {
 		res = append(res, PartProtoToModel(part))
+	}
+	return res
+}
+func PartsListToRepoModel(parts []*v1.Part) []*repoModel.Part {
+	res := make([]*repoModel.Part, len(parts))
+	for _, part := range parts {
+		res = append(res, PartProtoToRepoModel(part))
 	}
 	return res
 }

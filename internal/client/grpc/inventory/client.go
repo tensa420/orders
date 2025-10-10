@@ -1,13 +1,13 @@
 package inventory
 
 import (
-	inv "order/pkg/inventory/inventory"
+	inv "order/pkg/inventory"
 )
 
-type client struct {
+type Client struct {
 	generatedClient inv.InventoryServiceClient
 }
 
-func NewClient(generatedClient inv.InventoryServiceClient) *client {
-	return &client{generatedClient: generatedClient}
+func NewClient(generatedClient inv.InventoryServiceClient) *Client {
+	return &Client{generatedClient: generatedClient}
 }

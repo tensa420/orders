@@ -6,7 +6,7 @@ import (
 	"order/internal/client/converter"
 )
 
-func (a *api) CancelOrder(ctx context.Context, req ap.HandleCancelOrderParams) (ap.HandleCancelOrderRes, error) {
+func (a *Api) CancelOrder(ctx context.Context, req ap.HandleCancelOrderParams) (ap.HandleCancelOrderRes, error) {
 	err := a.serv.CancelOrder(ctx, converter.UUIDToString(req.OrderUUID))
 	if err != nil {
 		return nil, err

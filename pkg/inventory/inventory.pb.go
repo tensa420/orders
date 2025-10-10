@@ -4,7 +4,7 @@
 // 	protoc        v6.32.1
 // source: inventory/inventory.proto
 
-package v1
+package inventory
 
 import (
 	reflect "reflect"

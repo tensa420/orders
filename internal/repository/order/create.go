@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *repository) CreateOrder(ctx context.Context, userUUID string, partUUIDS []string, total float64) (string, error) {
+func (r *Repository) CreateOrder(ctx context.Context, userUUID string, partUUIDS []string, total float64) (string, error) {
 	OrderUUID := uuid.New()
 
 	order := repoModel.Order{

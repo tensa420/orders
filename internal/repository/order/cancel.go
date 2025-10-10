@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (r *repository) CancelOrder(ctx context.Context, orderUUID string) error {
+func (r *Repository) CancelOrder(ctx context.Context, orderUUID string) error {
 
 	ord, ok := r.orders[orderUUID]
 	if !ok {

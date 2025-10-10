@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (r *repository) HandleGetOrder(ctx context.Context, orderUUID string) (*repoModel.GetOrderResponse, error) {
+func (r *Repository) GetOrder(ctx context.Context, orderUUID string) (*repoModel.GetOrderResponse, error) {
 	r.mu.Lock()
 	ord, ok := r.orders[orderUUID]
 	r.mu.Unlock()

@@ -6,7 +6,7 @@ import (
 	"order/internal/client/converter"
 )
 
-func (a *api) PayOrder(ctx context.Context, req ap.PayOrderRequest, params ap.HandlePayOrderParams) (ap.HandlePayOrderRes, error) {
+func (a *Api) PayOrder(ctx context.Context, req ap.PayOrderRequest, params ap.HandlePayOrderParams) (ap.HandlePayOrderRes, error) {
 	transuuid, err := a.serv.PayOrder(ctx, params.OrderUUID.String(), req.PaymentMethod)
 	if err != nil {
 		return nil, err

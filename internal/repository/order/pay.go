@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (r *repository) PayOrder(ctx context.Context, transUUID string, orderUUID string, paymentMethod repoModel.PaymentMethod) error {
+func (r *Repository) PayOrder(ctx context.Context, transUUID string, orderUUID string, paymentMethod repoModel.PaymentMethod) error {
 	r.mu.Lock()
 	ord, ok := r.orders[orderUUID]
 	r.mu.Unlock()

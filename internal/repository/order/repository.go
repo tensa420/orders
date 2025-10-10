@@ -1,19 +1,22 @@
 package order
 
 import (
-	model "order/internal/repository/model"
-	v1 "order/pkg/inventory/inventory"
+	"order/internal/repository"
+	repomModel "order/internal/repository/model"
+	v1 "order/pkg/inventory"
 	"sync"
 )
 
-type repository struct {
+var _ repository.OrderRepositoryRepo = (*Repository)(nil)
+
+type Repository struct {
 	mu     sync.RWMutex
 	inv    v1.InventoryServiceClient
-	orders map[string]model.Order
+	orders map[string]repomModel.Order
 }
 
-func NewRepository() *repository {
-	return &repository{
-		orders: make(map[string]model.Order),
+func NewRepository() *Repository {
+	return &Repository{
+		orders: make(map[string]repomModel.Order),
 	}
 }

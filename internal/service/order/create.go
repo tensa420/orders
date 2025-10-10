@@ -7,16 +7,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *service) CreateOrder(ctx context.Context, userUUID string, partsUUID []string) (string, float64, error) {
+func (s *Service) CreateOrder(ctx context.Context, userUUID string, partsUUID []string) (string, float64, error) {
 	total := 0.0
-	parts, err := s.InventoryClient.ListParts(ctx, partsUUID)
+	parts, err := s.invClient.ListParts(ctx, partsUUID)
 	if err != nil {
 		return "", 0, status.Error(codes.Internal, err.Error())
 	}
 	for _, part := range parts {
 		total += part.Price
 	}
-	orderUUID, err := s.OrderRepository.CreateOrder(ctx, userUUID, parts, total)
+	orderUUID, err := s.OrderRepository.CreateOrder(ctx, userUUID, partsUUID, total)
 	if err != nil {
 		return "", 0, status.Error(codes.Internal, err.Error())
 	}

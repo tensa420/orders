@@ -1,20 +1,24 @@
 package order
 
 import (
-	"order/internal/client/grpc"
+	invClient "order/internal/client/grpc/inventory"
+	paymClient "order/internal/client/grpc/payment"
 	"order/internal/repository"
+	"order/internal/service"
 )
 
-type service struct {
+var _ service.OrderService = (*Service)(nil)
+
+type Service struct {
 	repository.OrderRepository
-	grpc.PaymentClient
-	grpc.InventoryClient
+	invClient  invClient.Client
+	paymClient paymClient.Client
 }
 
-func NewService(repo repository.OrderRepository, invClient grpc.InventoryClient, paymClient grpc.PaymentClient) *service {
-	return &service{
+func NewService(repo repository.OrderRepository, inventoryClient invClient.Client, paymClient paymClient.Client) *Service {
+	return &Service{
 		OrderRepository: repo,
-		InventoryClient: invClient,
-		PaymentClient:   paymClient,
+		invClient:       inventoryClient,
+		paymClient:      paymClient,
 	}
 }

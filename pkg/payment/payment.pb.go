@@ -4,7 +4,7 @@
 // 	protoc        v6.32.1
 // source: payment/payment.proto
 
-package v1
+package payment
 
 import (
 	reflect "reflect"
