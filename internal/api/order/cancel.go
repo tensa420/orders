@@ -2,14 +2,14 @@ package order
 
 import (
 	"context"
-	ap "order/api"
 	"order/internal/client/converter"
+	"order/pkg/api"
 )
 
-func (a *Server) HandleCancelOrder(ctx context.Context, req ap.HandleCancelOrderParams) (ap.HandleCancelOrderRes, error) {
+func (a *Server) HandleCancelOrder(ctx context.Context, req api.HandleCancelOrderParams) (api.HandleCancelOrderRes, error) {
 	err := a.serv.CancelOrder(ctx, converter.UUIDToString(req.OrderUUID))
 	if err != nil {
 		return nil, err
 	}
-	return &ap.HandleCancelOrderNoContent{}, nil
+	return &api.HandleCancelOrderNoContent{}, nil
 }

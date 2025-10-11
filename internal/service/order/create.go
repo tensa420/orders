@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *Service) CreateOrder(ctx context.Context, userUUID string, partsUUID []string) (string, float64, error) {
+func (s *OrderService) CreateOrder(ctx context.Context, userUUID string, partsUUID []string) (string, float64, error) {
 	total := 0.0
 	parts, err := s.invClient.ListParts(ctx, partsUUID)
 	if err != nil {

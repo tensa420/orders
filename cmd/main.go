@@ -5,12 +5,12 @@ import (
 	"log"
 	"net"
 	"net/http"
-	apii "order/api"
 	ap "order/internal/api/order"
 	clientInv "order/internal/client/grpc/inventory"
 	clientPaym "order/internal/client/grpc/payment"
 	repo "order/internal/repository/order"
 	service "order/internal/service/order"
+	apii "order/pkg/api"
 	"order/pkg/inventory"
 	"order/pkg/payment"
 	"os"
@@ -57,12 +57,11 @@ func main() {
 	defer connInventory.Close()
 	defer connPayment.Close()
 
-	orders := repo.NewRepository()
-	serv := service.NewService(orders, inventoryClient, paymentClient)
-	api := ap.NewAPI(serv)
+	orders := repo.NewOrderRepository()
+	serv := service.NewOrderService(orders, inventoryClient, paymentClient)
+	api := ap.NewOrderServer(serv)
 
-	hand := ap.NewOrderHandler(api)
-	orderHandler, err := apii.NewServer(hand, nil)
+	orderHandler, err := apii.NewServer(api, nil)
 	if err != nil {
 		log.Printf("Failed to create server: %v", err)
 	}

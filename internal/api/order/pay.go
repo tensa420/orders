@@ -2,14 +2,14 @@ package order
 
 import (
 	"context"
-	ap "order/api"
 	"order/internal/client/converter"
+	"order/pkg/api"
 )
 
-func (a *Server) HandlePayOrder(ctx context.Context, req ap.PayOrderRequest, params ap.HandlePayOrderParams) (ap.HandlePayOrderRes, error) {
+func (a *Server) HandlePayOrder(ctx context.Context, req *api.PayOrderRequest, params api.HandlePayOrderParams) (api.HandlePayOrderRes, error) {
 	transuuid, err := a.serv.PayOrder(ctx, params.OrderUUID.String(), req.PaymentMethod)
 	if err != nil {
 		return nil, err
 	}
-	return &ap.PayOrderResponse{TransactionUUID: converter.StringToUUID(transuuid)}, nil
+	return &api.PayOrderResponse{TransactionUUID: converter.StringToUUID(transuuid)}, nil
 }

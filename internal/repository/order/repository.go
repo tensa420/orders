@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-var _ repository.OrderRepositoryRepo = (*Repository)(nil)
+var _ repository.OrderRepository = (*Repository)(nil)
 
 type Repository struct {
 	mu     sync.RWMutex
@@ -15,7 +15,7 @@ type Repository struct {
 	orders map[string]repomModel.Order
 }
 
-func NewRepository() *Repository {
+func NewOrderRepository() *Repository {
 	return &Repository{
 		orders: make(map[string]repomModel.Order),
 	}

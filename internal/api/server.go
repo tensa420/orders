@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"order/api"
+	"order/pkg/api"
 )
 
 type OrderServer interface {

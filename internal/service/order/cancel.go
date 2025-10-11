@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *Service) CancelOrder(ctx context.Context, orderUUID string) error {
+func (s *OrderService) CancelOrder(ctx context.Context, orderUUID string) error {
 	err := s.repo.CancelOrder(ctx, orderUUID)
 	if err != nil {
 		return status.Errorf(codes.Internal, err.Error())

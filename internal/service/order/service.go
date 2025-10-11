@@ -7,26 +7,18 @@ import (
 	"order/internal/service"
 )
 
-var _ service.OrderService = (*Service)(nil)
+var _ service.OrderService = (*OrderService)(nil)
 
-type Service struct {
+type OrderService struct {
 	repo       repository.OrderRepository
 	invClient  invClient.Client
 	paymClient paymClient.Client
 }
 
-func NewService(repo repository.OrderRepository, inventoryClient *invClient.Client, paymClient *paymClient.Client) *Service {
-	return &Service{
+func NewOrderService(repo repository.OrderRepository, inventoryClient *invClient.Client, paymClient *paymClient.Client) *OrderService {
+	return &OrderService{
 		repo:       repo,
 		invClient:  *inventoryClient,
 		paymClient: *paymClient,
 	}
-}
-
-type Handler struct {
-	serv service.OrderService
-}
-
-func NewHandler(s service.OrderService) *Handler {
-	return &Handler{serv: s}
 }

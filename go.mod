@@ -23,7 +23,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/samber/lo v1.52.0 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

@@ -1,6 +1,6 @@
 package entity
 
-type GetOrderResponse struct {
+type GetOrderInfo struct {
 	OrderUUID       string
 	UserUUID        string
 	PartUuids       []string

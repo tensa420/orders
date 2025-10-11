@@ -8,12 +8,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *Service) GetOrder(ctx context.Context, orderUUID string) (*entity.GetOrderResponse, error) {
+func (s *OrderService) GetOrder(ctx context.Context, orderUUID string) (*entity.GetOrderInfo, error) {
 	req, err := s.repo.GetOrder(ctx, orderUUID)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
-	return &entity.GetOrderResponse{
+	return &entity.GetOrderInfo{
 		OrderUUID:       req.OrderUUID,
 		UserUUID:        req.UserUUID,
 		TransactionUUID: req.TransactionUUID,

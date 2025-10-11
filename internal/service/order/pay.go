@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *Service) PayOrder(ctx context.Context, orderUUID string, paymentMethod string) (string, error) {
+func (s *OrderService) PayOrder(ctx context.Context, orderUUID string, paymentMethod string) (string, error) {
 	transUUID := uuid.New()
 
 	convertedPaymentMethod := converter.ConvertPaymentMethod(paymentMethod)

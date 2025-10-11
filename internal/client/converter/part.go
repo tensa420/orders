@@ -1,9 +1,9 @@
 package converter
 
 import (
-	"order/api"
+	"order/internal/client/model"
 	repoModel "order/internal/repository/model"
-	"order/internal/service/model"
+	"order/pkg/api"
 	v1 "order/pkg/inventory"
 	v2 "order/pkg/payment"
 	"time"
