@@ -49,6 +49,7 @@ func main() {
 	if err != nil {
 		log.Printf("Failed to connect to payment: %v", err)
 	}
+
 	generatedInvClient := inventory.NewInventoryServiceClient(connInventory)
 	inventoryClient := clientInv.NewClient(generatedInvClient)
 	generatedPaymClient := payment.NewPaymentClient(connPayment)
