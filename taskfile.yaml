@@ -170,7 +170,7 @@ tasks:
           chmod +x {{.BUF}}
         }
   generate:
-    desc: "Генерация gRPC-кода из .proto файлов"
+    desc: "Генерация gRPC-кода из .deps файлов"
     cmds:
       - |
         protoc -I proto -I "C:\protoc\include" \
@@ -191,16 +191,16 @@ tasks:
         }
 
   proto:gen:
-    deps: [ install-buf, proto:install-plugins, proto:lint ]
-    desc: Генерация Go-кода из .proto
-    dir: shared/proto
+    deps: [ install-buf, deps:install-plugins, deps:lint ]
+    desc: Генерация Go-кода из .deps
+    dir: shared/deps
     cmds:
       - '{{.BUF}} generate'
 
   proto:lint:
-    deps: [ install-buf, proto:install-plugins ]
-    desc: Проверка .proto-файлов на соответствие стилю
-    dir: shared/proto
+    deps: [ install-buf, deps:install-plugins ]
+    desc: Проверка .deps-файлов на соответствие стилю
+    dir: shared/deps
     cmds:
       - '{{.BUF}} lint'
 
@@ -233,9 +233,9 @@ tasks:
           GOBIN={{.BIN_DIR}} go install github.com/ogen-go/ogen/cmd/ogen@{{.OGEN_VERSION}}
         }
   gen:
-    desc: "Генерация всех proto и OpenAPI деклараций"
+    desc: "Генерация всех deps и OpenAPI деклараций"
     cmds:
-      - task: proto:gen
+      - task: deps:gen
       - task: ogen:gen
 
   deps:update:

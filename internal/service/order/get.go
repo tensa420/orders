@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Service) GetOrder(ctx context.Context, orderUUID string) (*repoModel.GetOrderResponse, error) {
-	req, err := s.OrderRepository.GetOrder(ctx, orderUUID)
+	req, err := s.repo.GetOrder(ctx, orderUUID)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}

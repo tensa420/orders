@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.9
 // 	protoc        v6.32.1
-// source: payment/payment.proto
+// source: payment/payment.deps
 
 package payment
 
@@ -229,7 +229,7 @@ var File_payment_payment_proto protoreflect.FileDescriptor
 
 const file_payment_payment_proto_rawDesc = "" +
 	"\n" +
-	"\x15payment/payment.proto\x12\apayment\"\x89\x01\n" +
+	"\x15payment/payment.deps\x12\apayment\"\x89\x01\n" +
 	"\fOrderRequest\x12\x1d\n" +
 	"\n" +
 	"order_uuid\x18\x01 \x01(\tR\torderUuid\x12\x1b\n" +

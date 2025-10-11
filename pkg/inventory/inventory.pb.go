@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.9
 // 	protoc        v6.32.1
-// source: inventory/inventory.proto
+// source: inventory/inventory.deps
 
 package inventory
 
@@ -662,7 +662,7 @@ var File_inventory_inventory_proto protoreflect.FileDescriptor
 
 const file_inventory_inventory_proto_rawDesc = "" +
 	"\n" +
-	"\x19inventory/inventory.proto\x12\finventory.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"$\n" +
+	"\x19inventory/inventory.deps\x12\finventory.v1\x1a\x1fgoogle/protobuf/timestamp.deps\"$\n" +
 	"\x0eGetPartRequest\x12\x12\n" +
 	"\x04uuid\x18\x01 \x01(\tR\x04uuid\"9\n" +
 	"\x0fGetPartResponse\x12&\n" +

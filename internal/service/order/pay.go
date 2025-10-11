@@ -13,7 +13,7 @@ func (s *Service) PayOrder(ctx context.Context, orderUUID string, paymentMethod 
 	transUUID := uuid.New()
 
 	convertedPaymentMethod := converter.ConvertPaymentMethod(paymentMethod)
-	err := s.OrderRepository.PayOrder(ctx, transUUID.String(), orderUUID, convertedPaymentMethod)
+	err := s.repo.PayOrder(ctx, transUUID.String(), orderUUID, convertedPaymentMethod)
 	if err != nil {
 		return "", status.Error(codes.Internal, err.Error())
 	}

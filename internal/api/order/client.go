@@ -1,6 +1,7 @@
 package order
 
 import (
+	apii "order/api"
 	"order/internal/api"
 	"order/internal/service"
 	"order/pkg/inventory"
@@ -15,11 +16,22 @@ type Api struct {
 	serv    service.OrderService
 }
 
-func NewAPI(inv inventory.InventoryServiceClient, serv service.OrderService, paym payment.PaymentClient) *Api {
+func NewAPI(serv service.OrderService) *Api {
 
 	return &Api{
-		serv:    serv,
-		invent:  inv,
-		payment: paym,
+		serv: serv,
+	}
+}
+
+type OrderHandler struct {
+	api Api
+	apii.UnimplementedHandler
+	paym payment.PaymentClient
+	inv  inventory.InventoryServiceClient
+}
+
+func NewOrderHandler(api *Api) *OrderHandler {
+	return &OrderHandler{
+		api: *api,
 	}
 }

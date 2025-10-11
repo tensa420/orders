@@ -10,15 +10,23 @@ import (
 var _ service.OrderService = (*Service)(nil)
 
 type Service struct {
-	repository.OrderRepository
+	repo       repository.OrderRepository
 	invClient  invClient.Client
 	paymClient paymClient.Client
 }
 
-func NewService(repo repository.OrderRepository, inventoryClient invClient.Client, paymClient paymClient.Client) *Service {
+func NewService(repo repository.OrderRepository, inventoryClient *invClient.Client, paymClient *paymClient.Client) *Service {
 	return &Service{
-		OrderRepository: repo,
-		invClient:       inventoryClient,
-		paymClient:      paymClient,
+		repo:       repo,
+		invClient:  *inventoryClient,
+		paymClient: *paymClient,
 	}
+}
+
+type Handler struct {
+	serv service.OrderService
+}
+
+func NewHandler(s service.OrderService) *Handler {
+	return &Handler{serv: s}
 }

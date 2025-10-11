@@ -16,7 +16,7 @@ func (s *Service) CreateOrder(ctx context.Context, userUUID string, partsUUID []
 	for _, part := range parts {
 		total += part.Price
 	}
-	orderUUID, err := s.OrderRepository.CreateOrder(ctx, userUUID, partsUUID, total)
+	orderUUID, err := s.repo.CreateOrder(ctx, userUUID, partsUUID, total)
 	if err != nil {
 		return "", 0, status.Error(codes.Internal, err.Error())
 	}

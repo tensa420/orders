@@ -5,13 +5,14 @@ import (
 	"log"
 	"net"
 	"net/http"
+	apii "order/api"
 	ap "order/internal/api/order"
 	clientInv "order/internal/client/grpc/inventory"
 	clientPaym "order/internal/client/grpc/payment"
 	repo "order/internal/repository/order"
 	service "order/internal/service/order"
 	"order/pkg/inventory"
-	payment "order/pkg/payment"
+	"order/pkg/payment"
 	"os"
 	"os/signal"
 	"syscall"
@@ -58,11 +59,19 @@ func main() {
 
 	orders := repo.NewRepository()
 	serv := service.NewService(orders, inventoryClient, paymentClient)
-	api := ap.NewAPI(serv, inventoryClient, paymentClient)
+	api := ap.NewAPI(serv)
+
+	hand := ap.NewOrderHandler(api)
+	orderHandler, err := apii.NewServer(hand, nil)
+	if err != nil {
+		log.Fatalf("Failed to create server: %v", err)
+	}
+
 	srv := &http.Server{
 		Addr:    "localhost:8080",
 		Handler: orderHandler,
 	}
+
 	go func() {
 		serv, err := net.Listen("tcp", srv.Addr)
 		if err != nil {
