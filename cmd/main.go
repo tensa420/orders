@@ -37,7 +37,7 @@ func main() {
 		grpc.WithBlock(),
 	)
 	if err != nil {
-		log.Fatalf("Failed to connect to inventory: %v", err)
+		log.Printf("Failed to connect to inventory: %v", err)
 	}
 
 	connPayment, err := grpc.DialContext(
@@ -47,7 +47,7 @@ func main() {
 		grpc.WithBlock(),
 	)
 	if err != nil {
-		log.Fatalf("Failed to connect to payment: %v", err)
+		log.Printf("Failed to connect to payment: %v", err)
 	}
 	generatedInvClient := inventory.NewInventoryServiceClient(connInventory)
 	inventoryClient := clientInv.NewClient(generatedInvClient)
@@ -64,7 +64,7 @@ func main() {
 	hand := ap.NewOrderHandler(api)
 	orderHandler, err := apii.NewServer(hand, nil)
 	if err != nil {
-		log.Fatalf("Failed to create server: %v", err)
+		log.Printf("Failed to create server: %v", err)
 	}
 
 	srv := &http.Server{
@@ -75,11 +75,11 @@ func main() {
 	go func() {
 		serv, err := net.Listen("tcp", srv.Addr)
 		if err != nil {
-			log.Fatalf("Failed to listen: %v", err)
+			log.Printf("Failed to listen: %v", err)
 		}
 		err = srv.Serve(serv)
 		if err != nil {
-			log.Fatalf("Failed to serve: %v", err)
+			log.Printf("Failed to serve: %v", err)
 		}
 	}()
 
@@ -89,7 +89,7 @@ func main() {
 	log.Println("Shutting down server...")
 	err = srv.Shutdown(ctx)
 	if err != nil {
-		log.Fatalf("Server shutdown error: %v", err)
+		log.Printf("Server shutdown error: %v", err)
 	}
 	log.Println("Server shutdown successfully")
 }

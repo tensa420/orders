@@ -8,30 +8,30 @@ import (
 	"order/pkg/payment"
 )
 
-var _ api.Client = (*Api)(nil)
+var _ api.OrderServer = (*Server)(nil)
 
-type Api struct {
+type Server struct {
 	invent  inventory.InventoryServiceClient
 	payment payment.PaymentClient
 	serv    service.OrderService
 }
 
-func NewAPI(serv service.OrderService) *Api {
+func NewAPI(serv service.OrderService) *Server {
 
-	return &Api{
+	return &Server{
 		serv: serv,
 	}
 }
 
 type OrderHandler struct {
-	api Api
+	serv Server
 	apii.UnimplementedHandler
 	paym payment.PaymentClient
 	inv  inventory.InventoryServiceClient
 }
 
-func NewOrderHandler(api *Api) *OrderHandler {
+func NewOrderHandler(serv *Server) *OrderHandler {
 	return &OrderHandler{
-		api: *api,
+		serv: *serv,
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (a *Api) HandleGetOrder(ctx context.Context, params ap.HandleGetOrderParams) (ap.HandleGetOrderRes, error) {
+func (a *Server) HandleGetOrder(ctx context.Context, params ap.HandleGetOrderParams) (ap.HandleGetOrderRes, error) {
 	req, err := a.serv.GetOrder(ctx, params.OrderUUID.String())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())

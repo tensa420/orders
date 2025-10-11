@@ -2,18 +2,18 @@ package order
 
 import (
 	"context"
-	repoModel "order/internal/repository/model"
+	"order/internal/entity"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (s *Service) GetOrder(ctx context.Context, orderUUID string) (*repoModel.GetOrderResponse, error) {
+func (s *Service) GetOrder(ctx context.Context, orderUUID string) (*entity.GetOrderResponse, error) {
 	req, err := s.repo.GetOrder(ctx, orderUUID)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
-	return &repoModel.GetOrderResponse{
+	return &entity.GetOrderResponse{
 		OrderUUID:       req.OrderUUID,
 		UserUUID:        req.UserUUID,
 		TransactionUUID: req.TransactionUUID,
