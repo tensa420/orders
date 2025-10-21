@@ -2,12 +2,12 @@ package repository
 
 import (
 	"context"
-	repoModel "order/internal/repository/model"
+	"order/internal/entity"
 )
 
 type OrderRepository interface {
 	CreateOrder(ctx context.Context, userUUID string, partUUIDS []string, total float64) (string, error)
-	PayOrder(ctx context.Context, transUUID string, orderUUID string, paymentMethod repoModel.PaymentMethod) error
-	GetOrder(ctx context.Context, orderUUID string) (*repoModel.GetOrderResponse, error)
+	PayOrder(ctx context.Context, transUUID string, orderUUID string, paymentMethod entity.PaymentMethod) error
+	GetOrder(ctx context.Context, orderUUID string) (*entity.Order, error)
 	CancelOrder(ctx context.Context, orderUUID string) error
 }

@@ -3,11 +3,11 @@ package inventory
 import (
 	"context"
 	"order/internal/client/converter"
-	repoModel "order/internal/repository/model"
+	"order/internal/entity"
 	v1 "order/pkg/inventory"
 )
 
-func (c *Client) ListParts(ctx context.Context, partsUUID []string) ([]*repoModel.Part, error) {
+func (c *Client) ListParts(ctx context.Context, partsUUID []string) ([]*entity.Part, error) {
 	parts, err := c.generatedClient.ListParts(ctx, &v1.ListPartsRequest{
 		Filter: &v1.PartsFilter{
 			Uuids: partsUUID,
@@ -16,5 +16,5 @@ func (c *Client) ListParts(ctx context.Context, partsUUID []string) ([]*repoMode
 	if err != nil {
 		return nil, err
 	}
-	return converter.PartsListToRepoModel(parts.Parts), nil
+	return converter.PartsListToEntity(parts.Parts), nil
 }

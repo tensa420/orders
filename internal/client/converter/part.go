@@ -2,6 +2,7 @@ package converter
 
 import (
 	"order/internal/client/model"
+	"order/internal/entity"
 	repoModel "order/internal/repository/model"
 	"order/pkg/api"
 	v1 "order/pkg/inventory"
@@ -92,9 +93,43 @@ func PartProtoToRepoModel(part *v1.Part) *repoModel.Part {
 		UpdatedAt:     updatedAt,
 	}
 }
+func PartProtoToEntity(part *v1.Part) *entity.Part {
+	var updatedAt *time.Time
+	if part.UpdatedAt != nil {
+		tmp := part.UpdatedAt.AsTime()
+		updatedAt = &tmp
+	}
+	var createdAt *time.Time
+	if part.CreatedAt != nil {
+		tmp := part.CreatedAt.AsTime()
+		createdAt = &tmp
+	}
+	return &entity.Part{
+		UUID:          part.UUID,
+		Name:          part.Name,
+		Description:   part.Description,
+		Price:         part.Price,
+		StockQuantity: part.StockQuantity,
+		Category:      int8(part.Category),
+		Dimensions:    DimensionsToEntity(part.Dimensions),
+		Manufacturer:  ManufacturerToEntity(part.Manufacturer),
+		Tags:          part.Tags,
+		MetaData:      MetaDataToModel(part.Metadata),
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
+	}
+}
 
 func DimensionsToModel(dimen *v1.Dimensions) model.Dimensions {
 	return model.Dimensions{
+		Height: dimen.Height,
+		Width:  dimen.Width,
+		Length: dimen.Length,
+		Weight: dimen.Weight,
+	}
+}
+func DimensionsToEntity(dimen *v1.Dimensions) entity.Dimensions {
+	return entity.Dimensions{
 		Height: dimen.Height,
 		Width:  dimen.Width,
 		Length: dimen.Length,
@@ -118,6 +153,13 @@ func ManufacturerToModel(manu *v1.Manufacturer) model.Manufacturer {
 }
 func ManufacturerToRepoModel(manu *v1.Manufacturer) repoModel.Manufacturer {
 	return repoModel.Manufacturer{
+		Name:    manu.Name,
+		Country: manu.Country,
+		Website: manu.Website,
+	}
+}
+func ManufacturerToEntity(manu *v1.Manufacturer) entity.Manufacturer {
+	return entity.Manufacturer{
 		Name:    manu.Name,
 		Country: manu.Country,
 		Website: manu.Website,
@@ -151,10 +193,10 @@ func PartsListToModel(parts []*v1.Part) []*model.Part {
 	}
 	return res
 }
-func PartsListToRepoModel(parts []*v1.Part) []*repoModel.Part {
-	res := make([]*repoModel.Part, len(parts))
+func PartsListToEntity(parts []*v1.Part) []*entity.Part {
+	res := make([]*entity.Part, len(parts))
 	for _, part := range parts {
-		res = append(res, PartProtoToRepoModel(part))
+		res = append(res, PartProtoToEntity(part))
 	}
 	return res
 }
@@ -174,6 +216,9 @@ func OptNilUUIDToUUID(str *string) api.OptNilUUID {
 		Null:  false,
 	}
 }
+func OptNilUUIDToUUID1(nilUUID api.OptNilUUID) string {
+	return nilUUID.Value.String()
+}
 func OptNilStringToString(str *string) api.OptNilString {
 	return api.OptNilString{
 		Value: *str,
@@ -181,32 +226,35 @@ func OptNilStringToString(str *string) api.OptNilString {
 		Null:  false,
 	}
 }
-func ConvertPaymentMethodToString(method repoModel.PaymentMethod) string {
+func OptNilStringToString1(str api.OptNilString) string {
+	return str.Value
+}
+func ConvertPaymentMethodToString(method entity.PaymentMethod) string {
 	switch method {
-	case repoModel.PaymentMethodCard:
+	case entity.PaymentMethodCard:
 		return "CARD"
-	case repoModel.PaymentMethodSBP:
+	case entity.PaymentMethodSBP:
 		return "PaymentMethodSBP"
-	case repoModel.PaymentMethodCreditCard:
+	case entity.PaymentMethodCreditCard:
 		return "CREDIT_CARD"
-	case repoModel.PaymentMethodInvestorMoney:
+	case entity.PaymentMethodInvestorMoney:
 		return "INVESTOR_MONEY"
 	default:
 		return "UNKNOWN"
 	}
 }
-func ConvertPaymentMethod(method string) repoModel.PaymentMethod {
+func ConvertPaymentMethod(method string) entity.PaymentMethod {
 	switch method {
 	case "CARD":
-		return repoModel.PaymentMethodCard
+		return entity.PaymentMethodCard
 	case "PaymentMethodSBP":
-		return repoModel.PaymentMethodSBP
+		return entity.PaymentMethodSBP
 	case "CREDIT_CARD":
-		return repoModel.PaymentMethodCreditCard
+		return entity.PaymentMethodCreditCard
 	case "INVESTOR_MONEY":
-		return repoModel.PaymentMethodInvestorMoney
+		return entity.PaymentMethodInvestorMoney
 	default:
-		return repoModel.PaymentMethodUnknown
+		return entity.PaymentMethodUnknown
 	}
 }
 func convertCategoryFromPB(category repoModel.Category) v1.Category {
@@ -221,5 +269,51 @@ func convertCategoryFromPB(category repoModel.Category) v1.Category {
 		return v1.Category_CATEGORY_PORTHOLE
 	default:
 		return v1.Category_CATEGORY_UNKNOWN
+	}
+}
+
+func RepoModelToEntity(repoModel *repoModel.Order) *entity.Order {
+	return &entity.Order{
+		OrderUUID:       repoModel.OrderUUID,
+		UserUUID:        repoModel.UserUUID,
+		PartsUUID:       repoModel.PartsUUID,
+		TotalPrice:      repoModel.TotalPrice,
+		TransactionUUID: repoModel.TransactionUUID,
+		PaymentMethod:   repoModel.PaymentMethod,
+		Status:          repoModel.Status,
+	}
+}
+
+func ConvertApiGetResponseToEntity(resp api.GetOrderResponse) entity.Order {
+	optnilstr := OptNilStringToString1(resp.PaymentMethod)
+	pointToOptNilStr := &optnilstr
+
+	optniluuid := OptNilUUIDToUUID1(resp.TransactionUUID)
+	pointToOptNilUuid := &optniluuid
+
+	return entity.Order{
+		OrderUUID:       resp.OrderUUID.String(),
+		Status:          resp.Status,
+		PartsUUID:       resp.PartUuids,
+		TotalPrice:      resp.TotalPrice,
+		TransactionUUID: pointToOptNilUuid,
+		UserUUID:        resp.UserUUID.String(),
+		PaymentMethod:   pointToOptNilStr,
+	}
+}
+func ToAPI(o *entity.Order) *api.GetOrderResponse {
+	var tx api.OptNilUUID
+	tx = api.NewOptNilUUID(uuid.MustParse(*o.TransactionUUID))
+	var pm api.OptNilString
+	pm = api.NewOptNilString(*o.PaymentMethod)
+
+	return &api.GetOrderResponse{
+		OrderUUID:       uuid.MustParse(o.OrderUUID),
+		UserUUID:        uuid.MustParse(o.UserUUID),
+		PartUuids:       o.PartsUUID,
+		TotalPrice:      o.TotalPrice,
+		TransactionUUID: tx,
+		PaymentMethod:   pm,
+		Status:          o.Status,
 	}
 }

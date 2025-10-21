@@ -2,23 +2,23 @@ package order
 
 import (
 	"context"
+	"order/internal/entity"
 	repoModel "order/internal/repository/model"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-func (r *Repository) CancelOrder(ctx context.Context, orderUUID string) error {
-
+func (r *OrderRepository) CancelOrder(ctx context.Context, orderUUID string) error {
+	r.mu.RLock()
 	ord, ok := r.orders[orderUUID]
+	r.mu.RUnlock()
+
 	if !ok {
-		return status.Error(codes.NotFound, "order not found")
+		return entity.ErrOrderNotFound
 	}
 
 	if ord.Status == repoModel.StatusPaid {
-		return status.Error(codes.Internal, "Order already paid")
+		return entity.ErrInternalError
 	}
 
 	ord.Status = repoModel.StatusCancelled
-	return nil
+	return entity.ErrSuccessCancel
 }

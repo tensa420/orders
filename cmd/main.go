@@ -5,12 +5,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	ap "order/internal/api/order"
-	clientInv "order/internal/client/grpc/inventory"
-	clientPaym "order/internal/client/grpc/payment"
-	repo "order/internal/repository/order"
-	service "order/internal/service/order"
-	apii "order/pkg/api"
 	"order/pkg/inventory"
 	"order/pkg/payment"
 	"os"
@@ -20,13 +14,19 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	ap "order/internal/api/order"
+	clientInv "order/internal/client/grpc/inventory"
+	clientPaym "order/internal/client/grpc/payment"
+	repo "order/internal/repository/order"
+	service "order/internal/service/order"
+	apii "order/pkg/api"
 )
 
 var InventoryAddress = ":50052"
 var PaymentAddress = ":50051"
 
 func main() {
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -38,6 +38,7 @@ func main() {
 	)
 	if err != nil {
 		log.Printf("Failed to connect to inventory: %v", err)
+		return
 	}
 
 	connPayment, err := grpc.DialContext(
@@ -48,6 +49,7 @@ func main() {
 	)
 	if err != nil {
 		log.Printf("Failed to connect to payment: %v", err)
+		return
 	}
 
 	generatedInvClient := inventory.NewInventoryServiceClient(connInventory)
@@ -58,13 +60,14 @@ func main() {
 	defer connInventory.Close()
 	defer connPayment.Close()
 
-	orders := repo.NewOrderRepository()
-	serv := service.NewOrderService(orders, inventoryClient, paymentClient)
-	api := ap.NewOrderServer(serv)
+	orderRepo := repo.NewOrderRepository()
+	orderSerivce := service.NewOrderService(orderRepo, inventoryClient, paymentClient)
+	orderServer := ap.NewOrderServer(orderSerivce)
 
-	orderHandler, err := apii.NewServer(api, nil)
+	orderHandler, err := apii.NewServer(orderServer, nil)
 	if err != nil {
 		log.Printf("Failed to create server: %v", err)
+		return
 	}
 
 	srv := &http.Server{

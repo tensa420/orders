@@ -1,2 +1,3 @@
-/bin
-/.idea
+bin
+.idea
+order_service_contracts.md

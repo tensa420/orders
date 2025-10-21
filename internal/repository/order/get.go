@@ -2,25 +2,25 @@ package order
 
 import (
 	"context"
-	repoModel "order/internal/repository/model"
+	"order/internal/entity"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (r *Repository) GetOrder(ctx context.Context, orderUUID string) (*repoModel.GetOrderResponse, error) {
-	r.mu.Lock()
+func (r *OrderRepository) GetOrder(ctx context.Context, orderUUID string) (*entity.Order, error) {
+	r.mu.RLock()
 	ord, ok := r.orders[orderUUID]
-	r.mu.Unlock()
+	r.mu.RUnlock()
 
 	if !ok {
 		return nil, status.Error(codes.NotFound, "order not found")
 	}
 
-	return &repoModel.GetOrderResponse{
+	return &entity.Order{
 		OrderUUID:       orderUUID,
 		UserUUID:        ord.UserUUID,
-		PartUuids:       ord.PartsUUID,
+		PartsUUID:       ord.PartsUUID,
 		TotalPrice:      ord.TotalPrice,
 		TransactionUUID: ord.TransactionUUID,
 		PaymentMethod:   ord.PaymentMethod,

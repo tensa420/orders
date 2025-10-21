@@ -4,7 +4,7 @@ package inventory.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "pkg/pb/inventory/v1;v1";
+option go_package = "pkg/inventory";
 
 
 service InventoryService {

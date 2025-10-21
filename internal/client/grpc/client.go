@@ -2,11 +2,11 @@ package grpc
 
 import (
 	"context"
-	repoModel "order/internal/repository/model"
+	"order/internal/entity"
 )
 
 type InventoryClient interface {
-	ListParts(ctx context.Context, partsUUID []string) ([]*repoModel.Part, error)
+	ListParts(ctx context.Context, partsUUID []string) ([]*entity.Part, error)
 }
 
 type PaymentClient interface {
