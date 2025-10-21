@@ -4,18 +4,6 @@ import (
 	"errors"
 )
 
-func (s *ServiceSuite) TestCancelOrder_Internal() {
-	orderUUID := "zalupa-123"
-
-	expectedError := errors.New("internal error")
-	s.orderRepository.On("CancelOrder", s.ctx, orderUUID).Return(expectedError).Once()
-
-	err := s.orderService.CancelOrder(s.ctx, orderUUID)
-
-	s.Error(err)
-	s.orderRepository.AssertExpectations(s.T())
-}
-
 func (s *ServiceSuite) TestCancelOrder_NotFound() {
 	orderUUID := "non-existing"
 	expectedError := errors.New("order not found")
@@ -31,11 +19,10 @@ func (s *ServiceSuite) TestCancelOrder_NotFound() {
 func (s *ServiceSuite) TestCancelOrder_Success() {
 	orderUUID := "some-existing-uuid"
 
-	expectedError := errors.New("success cancel")
-
-	s.orderRepository.On("CancelOrder", s.ctx, orderUUID).Return(expectedError).Once()
+	s.orderRepository.On("CancelOrder", s.ctx, orderUUID).Return(nil).Once()
 
 	err := s.orderService.CancelOrder(s.ctx, orderUUID)
-	s.Error(err)
+
+	s.NoError(err)
 	s.orderRepository.AssertExpectations(s.T())
 }

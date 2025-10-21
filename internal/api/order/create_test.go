@@ -25,4 +25,5 @@ func (s *ServerSuite) TestCreateOrderServer_Success() {
 
 	s.NoError(err)
 	s.Equal(resp, result)
+	s.service.AssertExpectations(s.T())
 }

@@ -5,9 +5,6 @@ import (
 	"order/internal/client/converter"
 	"order/internal/entity"
 	repoModel "order/internal/repository/model"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (r *OrderRepository) PayOrder(ctx context.Context, transUUID string, orderUUID string, paymentMethod entity.PaymentMethod) error {
@@ -16,7 +13,7 @@ func (r *OrderRepository) PayOrder(ctx context.Context, transUUID string, orderU
 	r.mu.RUnlock()
 
 	if !ok {
-		return status.Error(codes.NotFound, "order not found")
+		return repoModel.ErrOrderNotFound
 	}
 
 	finalPaymentMethod := converter.ConvertPaymentMethodToString(paymentMethod)

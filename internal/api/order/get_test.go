@@ -35,4 +35,5 @@ func (s *ServerSuite) TestServerGet_Success() {
 
 	s.NoError(err)
 	s.Equal(result, converter.ToAPI(expectedOrder))
+	s.service.AssertExpectations(s.T())
 }

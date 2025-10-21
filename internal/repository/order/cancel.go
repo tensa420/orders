@@ -2,7 +2,6 @@ package order
 
 import (
 	"context"
-	"order/internal/entity"
 	repoModel "order/internal/repository/model"
 )
 
@@ -12,13 +11,13 @@ func (r *OrderRepository) CancelOrder(ctx context.Context, orderUUID string) err
 	r.mu.RUnlock()
 
 	if !ok {
-		return entity.ErrOrderNotFound
+		return repoModel.ErrOrderNotFound
 	}
 
 	if ord.Status == repoModel.StatusPaid {
-		return entity.ErrInternalError
+		return repoModel.ErrInternalError
 	}
 
 	ord.Status = repoModel.StatusCancelled
-	return entity.ErrSuccessCancel
+	return nil
 }

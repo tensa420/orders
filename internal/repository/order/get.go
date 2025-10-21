@@ -3,9 +3,7 @@ package order
 import (
 	"context"
 	"order/internal/entity"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	repoModel "order/internal/repository/model"
 )
 
 func (r *OrderRepository) GetOrder(ctx context.Context, orderUUID string) (*entity.Order, error) {
@@ -14,7 +12,7 @@ func (r *OrderRepository) GetOrder(ctx context.Context, orderUUID string) (*enti
 	r.mu.RUnlock()
 
 	if !ok {
-		return nil, status.Error(codes.NotFound, "order not found")
+		return nil, repoModel.ErrOrderNotFound
 	}
 
 	return &entity.Order{
