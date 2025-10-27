@@ -1,10 +1,10 @@
-package entity
+package errors
 
 import "errors"
 
 var (
-	ErrOrderNotFound      = errors.New("order not found")
+	ErrOrderNotFound      = errors.New("repository not found")
 	ErrInternalError      = errors.New("internal error")
-	ErrSuccessCancel      = errors.New("success cancel")
 	ErrSomeDetailsMissing = errors.New("some details missing")
+	ErrDataBaseError      = errors.New("data base error")
 )

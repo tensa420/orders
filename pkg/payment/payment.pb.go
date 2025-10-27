@@ -139,7 +139,7 @@ func (x *OrderRequest) GetPaymentMethod() PaymentMethod {
 
 type PayOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Order         *OrderRequest          `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
+	Order         *OrderRequest          `protobuf:"bytes,1,opt,name=repository,proto3" json:"repository,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -270,7 +270,7 @@ var file_payment_proto_goTypes = []any{
 }
 var file_payment_proto_depIdxs = []int32{
 	0, // 0: payment.OrderRequest.payment_method:type_name -> payment.PaymentMethod
-	1, // 1: payment.PayOrderRequest.order:type_name -> payment.OrderRequest
+	1, // 1: payment.PayOrderRequest.repository:type_name -> payment.OrderRequest
 	2, // 2: payment.Payment.PayOrder:input_type -> payment.PayOrderRequest
 	3, // 3: payment.Payment.PayOrder:output_type -> payment.PayOrderResponse
 	3, // [3:4] is the sub-list for method output_type

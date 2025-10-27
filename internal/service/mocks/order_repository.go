@@ -69,32 +69,22 @@ func (_c *OrderRepository_CancelOrder_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
-// CreateOrder provides a mock function with given fields: ctx, userUUID, partUUIDS, total
-func (_m *OrderRepository) CreateOrder(ctx context.Context, userUUID string, partUUIDS []string, total float64) (string, error) {
-	ret := _m.Called(ctx, userUUID, partUUIDS, total)
+// CreateOrder provides a mock function with given fields: ctx, order
+func (_m *OrderRepository) CreateOrder(ctx context.Context, order entity.Order) error {
+	ret := _m.Called(ctx, order)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateOrder")
 	}
 
-	var r0 string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, []string, float64) (string, error)); ok {
-		return rf(ctx, userUUID, partUUIDS, total)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, []string, float64) string); ok {
-		r0 = rf(ctx, userUUID, partUUIDS, total)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, entity.Order) error); ok {
+		r0 = rf(ctx, order)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, []string, float64) error); ok {
-		r1 = rf(ctx, userUUID, partUUIDS, total)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // OrderRepository_CreateOrder_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateOrder'
@@ -104,26 +94,24 @@ type OrderRepository_CreateOrder_Call struct {
 
 // CreateOrder is a helper method to define mock.On call
 //   - ctx context.Context
-//   - userUUID string
-//   - partUUIDS []string
-//   - total float64
-func (_e *OrderRepository_Expecter) CreateOrder(ctx interface{}, userUUID interface{}, partUUIDS interface{}, total interface{}) *OrderRepository_CreateOrder_Call {
-	return &OrderRepository_CreateOrder_Call{Call: _e.mock.On("CreateOrder", ctx, userUUID, partUUIDS, total)}
+//   - order entity.Order
+func (_e *OrderRepository_Expecter) CreateOrder(ctx interface{}, order interface{}) *OrderRepository_CreateOrder_Call {
+	return &OrderRepository_CreateOrder_Call{Call: _e.mock.On("CreateOrder", ctx, order)}
 }
 
-func (_c *OrderRepository_CreateOrder_Call) Run(run func(ctx context.Context, userUUID string, partUUIDS []string, total float64)) *OrderRepository_CreateOrder_Call {
+func (_c *OrderRepository_CreateOrder_Call) Run(run func(ctx context.Context, order entity.Order)) *OrderRepository_CreateOrder_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].([]string), args[3].(float64))
+		run(args[0].(context.Context), args[1].(entity.Order))
 	})
 	return _c
 }
 
-func (_c *OrderRepository_CreateOrder_Call) Return(_a0 string, _a1 error) *OrderRepository_CreateOrder_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *OrderRepository_CreateOrder_Call) Return(_a0 error) *OrderRepository_CreateOrder_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *OrderRepository_CreateOrder_Call) RunAndReturn(run func(context.Context, string, []string, float64) (string, error)) *OrderRepository_CreateOrder_Call {
+func (_c *OrderRepository_CreateOrder_Call) RunAndReturn(run func(context.Context, entity.Order) error) *OrderRepository_CreateOrder_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -187,17 +175,17 @@ func (_c *OrderRepository_GetOrder_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
-// PayOrder provides a mock function with given fields: ctx, transUUID, orderUUID, paymentMethod
-func (_m *OrderRepository) PayOrder(ctx context.Context, transUUID string, orderUUID string, paymentMethod entity.PaymentMethod) error {
-	ret := _m.Called(ctx, transUUID, orderUUID, paymentMethod)
+// PayOrder provides a mock function with given fields: ctx, info
+func (_m *OrderRepository) PayOrder(ctx context.Context, info entity.PaymentInfo) error {
+	ret := _m.Called(ctx, info)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PayOrder")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, entity.PaymentMethod) error); ok {
-		r0 = rf(ctx, transUUID, orderUUID, paymentMethod)
+	if rf, ok := ret.Get(0).(func(context.Context, entity.PaymentInfo) error); ok {
+		r0 = rf(ctx, info)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -212,16 +200,14 @@ type OrderRepository_PayOrder_Call struct {
 
 // PayOrder is a helper method to define mock.On call
 //   - ctx context.Context
-//   - transUUID string
-//   - orderUUID string
-//   - paymentMethod entity.PaymentMethod
-func (_e *OrderRepository_Expecter) PayOrder(ctx interface{}, transUUID interface{}, orderUUID interface{}, paymentMethod interface{}) *OrderRepository_PayOrder_Call {
-	return &OrderRepository_PayOrder_Call{Call: _e.mock.On("PayOrder", ctx, transUUID, orderUUID, paymentMethod)}
+//   - info entity.PaymentInfo
+func (_e *OrderRepository_Expecter) PayOrder(ctx interface{}, info interface{}) *OrderRepository_PayOrder_Call {
+	return &OrderRepository_PayOrder_Call{Call: _e.mock.On("PayOrder", ctx, info)}
 }
 
-func (_c *OrderRepository_PayOrder_Call) Run(run func(ctx context.Context, transUUID string, orderUUID string, paymentMethod entity.PaymentMethod)) *OrderRepository_PayOrder_Call {
+func (_c *OrderRepository_PayOrder_Call) Run(run func(ctx context.Context, info entity.PaymentInfo)) *OrderRepository_PayOrder_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(entity.PaymentMethod))
+		run(args[0].(context.Context), args[1].(entity.PaymentInfo))
 	})
 	return _c
 }
@@ -231,7 +217,7 @@ func (_c *OrderRepository_PayOrder_Call) Return(_a0 error) *OrderRepository_PayO
 	return _c
 }
 
-func (_c *OrderRepository_PayOrder_Call) RunAndReturn(run func(context.Context, string, string, entity.PaymentMethod) error) *OrderRepository_PayOrder_Call {
+func (_c *OrderRepository_PayOrder_Call) RunAndReturn(run func(context.Context, entity.PaymentInfo) error) *OrderRepository_PayOrder_Call {
 	_c.Call.Return(run)
 	return _c
 }

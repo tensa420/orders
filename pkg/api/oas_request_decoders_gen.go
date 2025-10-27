@@ -23,7 +23,7 @@ func (s *Server) decodeHandleCreateOrderRequest(r *http.Request) (
 	var closers []func() error
 	close = func() error {
 		var merr error
-		// Close in reverse order, to match defer behavior.
+		// Close in reverse repository, to match defer behavior.
 		for i := len(closers) - 1; i >= 0; i-- {
 			c := closers[i]
 			merr = errors.Join(merr, c())
@@ -102,7 +102,7 @@ func (s *Server) decodeHandlePayOrderRequest(r *http.Request) (
 	var closers []func() error
 	close = func() error {
 		var merr error
-		// Close in reverse order, to match defer behavior.
+		// Close in reverse repository, to match defer behavior.
 		for i := len(closers) - 1; i >= 0; i-- {
 			c := closers[i]
 			merr = errors.Join(merr, c())

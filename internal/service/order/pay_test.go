@@ -15,16 +15,20 @@ func (s *ServiceSuite) TestPayOrder() {
 	}
 	s.orderRepository.On("GetOrder", s.ctx, orderUUID).Return(&expectedOrder, nil).Once()
 
-	transUUID := "some-trans-uuid"
-	s.paymentClient.On("PayOrder", s.ctx, expectedOrder.OrderUUID, expectedOrder.UserUUID, exampleOfPaymentMethod).Return(transUUID, nil).Once()
+	examplePaymentInfo := entity.PaymentInfo{
+		TransactionUUID: "some-trans-uuid",
+		OrderUUID:       orderUUID,
+		PaymentMethod:   converter.ConvertPaymentMethod(exampleOfPaymentMethod),
+	}
+	s.paymentClient.On("PayOrder", s.ctx, expectedOrder.OrderUUID, expectedOrder.UserUUID, exampleOfPaymentMethod).Return(examplePaymentInfo.TransactionUUID, nil).Once()
 
 	paymentMethod := entity.PaymentMethodCard
-	s.orderRepository.On("PayOrder", s.ctx, transUUID, expectedOrder.OrderUUID, paymentMethod).Return(nil).Once()
+	s.orderRepository.On("PayOrder", s.ctx, examplePaymentInfo).Return(nil).Once()
 
 	result, err := s.orderService.PayOrder(s.ctx, orderUUID, converter.ConvertPaymentMethodToString(paymentMethod))
 
 	s.NoError(err)
-	s.Equal(result, transUUID)
+	s.Equal(result, examplePaymentInfo.TransactionUUID)
 
 	s.paymentClient.AssertExpectations(s.T())
 	s.orderRepository.AssertExpectations(s.T())

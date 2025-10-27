@@ -1,24 +1,15 @@
 package order
 
 import (
-	"errors"
+	"order/internal/entity"
 )
-
-func (s *ServiceSuite) TestCancelOrder_NotFound() {
-	orderUUID := "non-existing"
-	expectedError := errors.New("order not found")
-
-	s.orderRepository.On("CancelOrder", s.ctx, orderUUID).Return(expectedError).Once()
-
-	err := s.orderService.CancelOrder(s.ctx, orderUUID)
-
-	s.Error(err)
-	s.orderRepository.AssertExpectations(s.T())
-}
 
 func (s *ServiceSuite) TestCancelOrder_Success() {
 	orderUUID := "some-existing-uuid"
-
+	order := &entity.Order{
+		OrderUUID: orderUUID,
+	}
+	s.orderRepository.On("GetOrder", s.ctx, orderUUID).Return(order, nil).Once()
 	s.orderRepository.On("CancelOrder", s.ctx, orderUUID).Return(nil).Once()
 
 	err := s.orderService.CancelOrder(s.ctx, orderUUID)

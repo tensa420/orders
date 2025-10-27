@@ -12,19 +12,22 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	ap "order/internal/api/order"
 	clientInv "order/internal/client/grpc/inventory"
 	clientPaym "order/internal/client/grpc/payment"
-	repo "order/internal/repository/order"
+	repo "order/internal/repository/repository"
 	service "order/internal/service/order"
 	apii "order/pkg/api"
 )
 
-var InventoryAddress = ":50052"
-var PaymentAddress = ":50051"
+var (
+	InventoryAddress = "localhost:50062"
+	PaymentAddress   = ":50051"
+)
 
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
@@ -60,18 +63,28 @@ func main() {
 	defer connInventory.Close()
 	defer connPayment.Close()
 
-	orderRepo := repo.NewOrderRepository()
+	con, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	err = con.Ping(ctx)
+	if err != nil {
+		log.Fatalf("Error pinging database: %v", err)
+	}
+
+	orderRepo := repo.NewOrderRepository(con)
 	orderSerivce := service.NewOrderService(orderRepo, inventoryClient, paymentClient)
 	orderServer := ap.NewOrderServer(orderSerivce)
 
-	orderHandler, err := apii.NewServer(orderServer, nil)
+	orderHandler, err := apii.NewServer(orderServer)
 	if err != nil {
 		log.Printf("Failed to create server: %v", err)
 		return
 	}
 
 	srv := &http.Server{
-		Addr:    "localhost:8080",
+		Addr:    ":8080",
 		Handler: orderHandler,
 	}
 

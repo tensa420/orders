@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"order/internal/client/converter"
+	"order/internal/entity"
 )
 
 func (s *OrderService) PayOrder(ctx context.Context, orderUUID string, paymentMethod string) (string, error) {
@@ -18,7 +19,11 @@ func (s *OrderService) PayOrder(ctx context.Context, orderUUID string, paymentMe
 		return "", err
 	}
 
-	err = s.repo.PayOrder(ctx, transactionUUID, orderUUID, convertedPaymentMethod)
+	err = s.repo.PayOrder(ctx, entity.PaymentInfo{
+		TransactionUUID: transactionUUID,
+		OrderUUID:       orderUUID,
+		PaymentMethod:   convertedPaymentMethod,
+	})
 	if err != nil {
 		return "", err
 	}

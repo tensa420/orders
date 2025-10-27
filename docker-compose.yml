@@ -1,0 +1,90 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: mypostgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app-network
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: my-go-server
+    ports:
+      - "${APP_PORT}:8080"
+    env_file:
+      - ./.env
+    environment:
+      - DB_URI=${DB_URI}
+      - MIGRATIONS_DIR=${MIGRATIONS_DIR}
+      - APP_PORT=${APP_PORT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  inventoryService:
+    image: inventoryserv:1.0.3
+    container_name: inventoryService
+    env_file:
+      - ./.env
+    networks:
+      - app-network
+    ports:
+      - "0.0.0.0:8081:50062"
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+  mongodb:
+    image: mongo:7.0.5 # Образ MongoDB версии 7.0.5
+    container_name: my_mongo
+    env_file:
+      - ./.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME} # Логин для MongoDB из .env
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD} # Пароль для MongoDB из .env
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE} # Создаем базу данных при инициализации
+    ports:
+      - "${MONGO_PORT}:27017" # Пробрасываем порт: внешний из .env, внутренний фиксированный
+    volumes:
+      - mongodata:/data/db # Volume для сохранности данных базы
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "echo 'db.runCommand({ ping: 1 }).ok' | mongosh --quiet -u ${MONGO_INITDB_ROOT_USERNAME} -p ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase ${MONGO_AUTH_DB}",
+        ]
+      # Проверка готовности MongoDB: выполняем команду ping через mongosh с указанием логина и пароля
+      # --quiet отключает лишний вывод, чтобы результатом был только "1" при успехе
+      interval: 10s # Запускаем проверку каждые 10 секунд
+      timeout: 5s # Максимальное время ожидания выполнения ping-команды
+      retries: 5 # После 5 неудачных проверок подряд контейнер считается "неработоспособным"
+
+    restart: unless-stopped # Автоматический перезапуск контейнера, кроме ручной остановки
+    networks:
+      - app-network
+
+
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  mongodata:

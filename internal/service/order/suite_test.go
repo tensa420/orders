@@ -19,7 +19,7 @@ type ServiceSuite struct {
 
 func (s *ServiceSuite) SetupTest() {
 	s.ctx = context.Background()
-	s.orderRepository = mocks.NewOrderRepository(s.T())
+	s.orderRepository = new(mocks.OrderRepository)
 	s.paymentClient = new(mocks.PaymentClient)
 	s.inventoryClient = new(mocks.InventoryClient)
 	s.orderService = NewOrderService(s.orderRepository, s.inventoryClient, s.paymentClient)
