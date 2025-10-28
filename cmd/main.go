@@ -25,8 +25,8 @@ import (
 )
 
 var (
-	InventoryAddress = "localhost:50062"
-	PaymentAddress   = ":50051"
+	inventoryAddr = "inventoryService:50062"
+	paymentAddr   = "paymentService:50051"
 )
 
 func main() {
@@ -35,7 +35,7 @@ func main() {
 
 	connInventory, err := grpc.DialContext(
 		ctx,
-		InventoryAddress,
+		inventoryAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
 	)
@@ -46,7 +46,7 @@ func main() {
 
 	connPayment, err := grpc.DialContext(
 		ctx,
-		PaymentAddress,
+		paymentAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
 	)
@@ -63,7 +63,7 @@ func main() {
 	defer connInventory.Close()
 	defer connPayment.Close()
 
-	con, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
+	con, err := pgxpool.New(ctx, os.Getenv("DB_URI"))
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
