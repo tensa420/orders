@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
 	"order/internal/entity"
 
 	"github.com/go-faster/errors"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pressly/goose/v3"
 )
 
 type OrderRepository struct {
@@ -17,6 +19,26 @@ func NewOrderRepository(pool *pgxpool.Pool) *OrderRepository {
 	return &OrderRepository{
 		pool: pool,
 	}
+}
+
+type Migrator struct {
+	repo          *sql.DB
+	migrationsDir string
+}
+
+func NewMigrator(repo *sql.DB, migrationsDir string) *Migrator {
+	return &Migrator{
+		repo:          repo,
+		migrationsDir: migrationsDir,
+	}
+}
+
+func (m *Migrator) Up() error {
+	err := goose.Up(m.repo, m.migrationsDir)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *OrderRepository) CreateOrder(ctx context.Context, order entity.Order) error {

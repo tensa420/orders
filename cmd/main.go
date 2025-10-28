@@ -12,7 +12,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -63,17 +65,41 @@ func main() {
 	defer connInventory.Close()
 	defer connPayment.Close()
 
-	con, err := pgxpool.New(ctx, os.Getenv("DB_URI"))
+	con, err := pgx.Connect(ctx, os.Getenv("DB_URI"))
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Printf("Failed to connect to DB: %v", err)
+		return
 	}
 
 	err = con.Ping(ctx)
 	if err != nil {
+		log.Printf("Failed to ping DB: %v", err)
+		return
+	}
+
+	migrations := repo.NewMigrator(stdlib.OpenDB(*con.Config().Copy()), "migrations")
+	err = migrations.Up()
+	if err != nil {
+		log.Printf("Failed to apply migrations: %v", err)
+		return
+	}
+
+	err = con.Close(ctx)
+	if err != nil {
+		log.Printf("Failed to close connection with db: %v", err)
+	}
+
+	pool, err := pgxpool.New(ctx, os.Getenv("DB_URI"))
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	err = pool.Ping(ctx)
+	if err != nil {
 		log.Fatalf("Error pinging database: %v", err)
 	}
 
-	orderRepo := repo.NewOrderRepository(con)
+	orderRepo := repo.NewOrderRepository(pool)
 	orderSerivce := service.NewOrderService(orderRepo, inventoryClient, paymentClient)
 	orderServer := ap.NewOrderServer(orderSerivce)
 
