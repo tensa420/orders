@@ -1,3 +1,6 @@
 bin
 .idea
+mockery.yaml
+taskfile.yaml
 order_service_contracts.md
+
