@@ -2,6 +2,7 @@ package order
 
 import (
 	"order/internal/client/grpc"
+	"order/internal/producer"
 	"order/internal/repository"
 	"order/internal/service"
 )
@@ -12,12 +13,14 @@ type OrderService struct {
 	repo       repository.OrderRepository
 	invClient  grpc.InventoryClient
 	paymClient grpc.PaymentClient
+	prod       producer.OrderPaidProducer
 }
 
-func NewOrderService(repo repository.OrderRepository, inventoryClient grpc.InventoryClient, paymClient grpc.PaymentClient) *OrderService {
+func NewOrderService(repo repository.OrderRepository, prod producer.OrderPaidProducer, inventoryClient grpc.InventoryClient, paymClient grpc.PaymentClient) *OrderService {
 	return &OrderService{
 		repo:       repo,
 		invClient:  inventoryClient,
 		paymClient: paymClient,
+		prod:       prod,
 	}
 }

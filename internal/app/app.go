@@ -2,15 +2,18 @@ package app
 
 import (
 	"context"
+	"log"
 	"net"
 	"net/http"
 	repo "order/internal/repository/repository"
 	"os"
 
+	"github.com/go-faster/errors"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 
 	"order/internal/config"
 	"order/pkg/api"
@@ -32,11 +35,22 @@ func NewApp(ctx context.Context) (*App, error) {
 	return a, nil
 }
 func (a *App) Run(ctx context.Context) error {
-	err := a.RunHTTPServer(ctx)
-	if err != nil {
-		logger.Error(ctx, "Failed to run http server:", zap.Error(err))
-	}
-	return nil
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		logger.Info(ctx, "http server starting...")
+		return a.RunHTTPServer(ctx)
+	})
+
+	g.Go(func() error {
+		logger.Info(ctx, "consumer starting...")
+		return a.RunConsumer(ctx)
+	})
+
+	// Здесь Run будет блокировать main, пока:
+	// - одна из горутин не вернёт ошибку
+	// - или ctx не отменят по сигналу
+	return g.Wait()
 }
 
 func (a *App) initDeps(ctx context.Context) error {
@@ -127,5 +141,31 @@ func (a *App) InitMigrator(ctx context.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+func (a *App) RunConsumer(ctx context.Context) error {
+	log.Printf("Consumer started!!!")
+
+	service := a.diContainer.NewShipAssembledConsumer(ctx)
+	if service == nil {
+		return errors.New("shipAssembledCons is nil (check Kafka consumer init)")
+	}
+
+	handler := a.diContainer.NewShipAssembledCons(ctx)
+	if handler == nil {
+		return errors.New("shipAssembled1 is nil (consumer handler not inited)")
+	}
+
+	// 3. Запускаем
+	err := service.RunConsumer(
+		ctx,
+		[]string{os.Getenv("KAFKA_CONSUMER_TOPIC")},
+		handler,
+	)
+	if err != nil {
+		log.Printf("Failed to run consumer: %v", err)
+		return err
+	}
 	return nil
 }

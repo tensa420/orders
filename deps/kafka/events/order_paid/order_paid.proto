@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option go_package = "pkg/events/order_paid;";
+
+message OrderPaid {
+  string EventUUID = 1;
+  string OrderUUID = 2;
+  string UserUUID = 3;
+  string PaymentMethod =4;
+  string TransactionUUID =5;
+}

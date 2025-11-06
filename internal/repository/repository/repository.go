@@ -84,3 +84,11 @@ func (r *OrderRepository) CancelOrder(ctx context.Context, orderUUID string) err
 	}
 	return nil
 }
+
+func (r *OrderRepository) SetOrderStatusCompleted(ctx context.Context, orderUUID string) error {
+	_, err := r.pool.Exec(ctx, "UPDATE orders SET status = $1 WHERE order_uuid = $2 ", "COMPLETED", orderUUID)
+	if err != nil {
+		return errors.Wrap(err, "failed to set status completed")
+	}
+	return nil
+}

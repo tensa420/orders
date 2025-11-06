@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option go_package = "pkg/events/ship_assembled";
+
+message ShipAssembled {
+  string EventUUID = 1;
+  string UserUUID  =2;
+  string OrderUUID = 3;
+  int64 BuildTimeInSec = 4;
+}

@@ -93,10 +93,13 @@ func InitForBenchmark() {
 	}
 }
 
+// logger возвращает глобальный enrich-aware логгер
 func Logger() *logger {
 	return globalLogger
 }
 
+// NopLogger устанавливает глобальный логгер в no-op режим.
+// Идеально для юнит-тестов.
 func SetNopLogger() {
 	globalLogger = &logger{
 		zapLogger: zap.NewNop(),

@@ -10,4 +10,5 @@ type OrderRepository interface {
 	CreateOrder(ctx context.Context, order entity.Order) error
 	PayOrder(ctx context.Context, info entity.PaymentInfo) error
 	CancelOrder(ctx context.Context, orderUUID string) error
+	SetOrderStatusCompleted(ctx context.Context, orderUUID string) error
 }

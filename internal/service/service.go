@@ -10,4 +10,5 @@ type OrderService interface {
 	PayOrder(ctx context.Context, orderUUID string, paymentMethod string) (string, error)
 	GetOrder(ctx context.Context, orderUUID string) (*entity.Order, error)
 	CancelOrder(ctx context.Context, orderUUID string) error
+	SetOrderStatusCompleted(ctx context.Context, orderUUID string) error
 }

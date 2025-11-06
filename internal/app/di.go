@@ -8,6 +8,10 @@ import (
 	api "order/internal/api/order"
 	inventory2 "order/internal/client/grpc/inventory"
 	payment2 "order/internal/client/grpc/payment"
+	"order/internal/consumer"
+	consumer2 "order/internal/consumer/consumer"
+	"order/internal/producer"
+	"order/internal/producer/order_paid"
 	"order/internal/repository"
 	repository2 "order/internal/repository/repository"
 	"order/internal/service"
@@ -18,6 +22,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -36,6 +41,13 @@ type diContainer struct {
 	inventoryServiceClient *inventory2.Client
 
 	paymentServiceClient *payment2.Client
+
+	consumer sarama.ConsumerGroup
+	producer sarama.SyncProducer
+
+	orderPaidProd     producer.OrderPaidProducer
+	shipAssembled1    consumer.ShipAssembledConsumer
+	shipAssembledCons consumer.ShipAssembledConsumerService
 }
 
 func NewDIContainer() *diContainer {
@@ -51,7 +63,7 @@ func (d *diContainer) OrderApi(ctx context.Context) api2.OrderServer {
 
 func (d *diContainer) OrderService(ctx context.Context) service.OrderService {
 	if d.orderUseCase == nil {
-		return order.NewOrderService(d.OrderRepository(ctx), d.InventoryClient(ctx), d.PaymentClient(ctx))
+		return order.NewOrderService(d.OrderRepository(ctx), d.NewOrderPaidProducer(ctx), d.InventoryClient(ctx), d.PaymentClient(ctx))
 	}
 	return d.orderUseCase
 }
@@ -146,4 +158,56 @@ func CreateGRPCConnection(addr string) (*grpc.ClientConn, error) {
 		return nil, err
 	}
 	return conn, nil
+}
+
+func (d *diContainer) Producer(ctx context.Context) sarama.SyncProducer {
+	cfg := ProducerConfig()
+	prod, err := sarama.NewSyncProducer([]string{os.Getenv("KAFKA_BROKER")}, cfg)
+	if err != nil {
+		log.Printf("Error creating sync producer: %v", err)
+		return nil
+	}
+	return prod
+}
+
+func (d *diContainer) ConsumerGroup(ctx context.Context) sarama.ConsumerGroup {
+	cfg := ConsumerConfig()
+	cons, err := sarama.NewConsumerGroup([]string{os.Getenv("KAFKA_BROKER")}, "EASY-KAFKA-GROUP", cfg)
+	if err != nil {
+		log.Printf("Error creating consumer group: %v", err)
+		return nil
+	}
+	return cons
+}
+
+func (d *diContainer) NewShipAssembledConsumer(ctx context.Context) consumer.ShipAssembledConsumerService {
+	d.shipAssembledCons = consumer2.NewShipAssembledConsumer(d.ConsumerGroup(ctx), []string{os.Getenv("KAFKA_CONSUMER_TOPIC")})
+	return d.shipAssembledCons
+}
+
+func (d *diContainer) NewOrderPaidProducer(ctx context.Context) producer.OrderPaidProducer {
+	d.orderPaidProd = order_paid.NewOrderPaidProducer(d.Producer(ctx), os.Getenv("KAFKA_PRODUSER_TOPIC"))
+	return d.orderPaidProd
+}
+
+func ConsumerConfig() *sarama.Config {
+	config := sarama.NewConfig()
+	config.Version = sarama.V4_0_0_0
+	config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.NewBalanceStrategyRoundRobin()}
+	config.Consumer.Offsets.Initial = sarama.OffsetOldest
+
+	return config
+}
+
+func ProducerConfig() *sarama.Config {
+	config := sarama.NewConfig()
+	config.Version = sarama.V4_0_0_0
+	config.Producer.Return.Successes = true
+
+	return config
+}
+
+func (d *diContainer) NewShipAssembledCons(ctx context.Context) consumer.ShipAssembledConsumer {
+	d.shipAssembled1 = consumer2.NewShipAssembledConsumer(d.ConsumerGroup(ctx), []string{os.Getenv("KAFKA_CONSUMER_TOPIC")})
+	return d.shipAssembled1
 }

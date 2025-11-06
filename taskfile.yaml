@@ -620,3 +620,7 @@ tasks:
         {{ if not .IS_WINDOWS }}chmod +x "$SCRIPT"{{ end }}
         export SERVICES="{{.SERVICES}}"
         ENV_SUBST={{.ENVSUBST}} "$SCRIPT"
+  gen-for-kafka:
+    desc: Generate Go pb from proto
+    cmds:
+      - protoc -I deps --go_out=paths=source_relative:. deps/kafka/events/ship_assembled/ship_assembled.proto
